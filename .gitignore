@@ -47,3 +47,7 @@ luac.out
 # data
 *.snap
 *.xlog
+*.log
+
+# sensitive data
+*.nginx

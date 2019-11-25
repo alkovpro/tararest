@@ -4,8 +4,12 @@
 --- DateTime: 25.11.2019 16:29
 ---
 
+local HOST = os.getenv('APP_HOST') or '127.0.0.1'
+local PORT = tonumber(os.getenv('APP_PORT') or '8080')
+local MAX_RPS = tonumber(os.getenv('APP_MAX_RPS') or '10')
+
 return {
-    host = '127.0.0.1',
-    port = 8080,
-    max_rps = 3,
+    host = HOST,
+    port = PORT,
+    max_rps = MAX_RPS,
 }
