@@ -5,6 +5,11 @@ luac.out
 *.src.rock
 *.zip
 *.tar.gz
+.rocks
+
+# idea
+.idea
+*.iml
 
 # Object files
 *.o
@@ -39,3 +44,6 @@ luac.out
 *.x86_64
 *.hex
 
+# data
+*.snap
+*.xlog
