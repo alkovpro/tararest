@@ -8,12 +8,14 @@ local handlers = require("app.rest.handlers")
 local middleware = require("app.rest.middleware")
 
 local router = require('http.router').new()
+router:route({ path = '/kv', method = 'POST' }, handlers.kv.post)
 router:route({ path = '/kv/:id', method = 'GET' }, handlers.kv.get)
 router:route({ path = '/kv/:id', method = 'PUT' }, handlers.kv.put)
-router:route({ path = '/kv', method = 'POST' }, handlers.kv.post)
 router:route({ path = '/kv/:id', method = 'DELETE' }, handlers.kv.delete)
 
 router:use(middleware.catch_error, { name = 'catch_error' })
+router:use(middleware.limit_rps, { name = 'limit_rps' })
+router:use(middleware.log_response, { name = 'log_response' })
 
 return {
     router = router

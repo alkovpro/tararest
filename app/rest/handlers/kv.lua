@@ -5,7 +5,7 @@
 ---
 local checks = require('checks')
 
-function check_body(body, ...)
+local function check_body(body, ...)
     local args = ...
     local function check_body_inner(body)
         checks(args)
@@ -13,7 +13,7 @@ function check_body(body, ...)
     check_body_inner(body)
 end
 
-function get_data(key_id, req)
+local function get_data(key_id, req)
     local data = box.space.data.index.primary:select(key_id)[1]
     if data == nil then
         local res = req:render {
@@ -26,19 +26,15 @@ function get_data(key_id, req)
 end
 
 local function kv_get(req)
-    print("GET")
     local key_id = req:stash('id')
-    --print(key_id)
     local data, res = get_data(key_id, req)
     if res ~= nil then
         return res
     end
-    --print(data)
     return req:render { json = { value = data[2] } }
 end
 
 local function kv_post(req)
-    print("POST")
     local data = req:json()
     check_body(data, { key = 'string', value = 'table' })
     local key_id = data.key
@@ -52,11 +48,11 @@ local function kv_post(req)
         return res
     end
     box.space.data:insert({ key_id, value })
-    return req:render { json = { value = value } }
+    local new_data = box.space.data.index.primary:select(key_id)[1]
+    return req:render { json = { key = new_data[1], value = new_data[2] } }
 end
 
 local function kv_put(req)
-    print("PUT")
     local key_id = req:stash('id')
     local data = req:json()
     check_body(data, { value = 'table' })
@@ -70,7 +66,6 @@ local function kv_put(req)
 end
 
 local function kv_delete(req)
-    print("DELETE")
     local key_id = req:stash('id')
     local _, res = get_data(key_id, req)
     if res ~= nil then

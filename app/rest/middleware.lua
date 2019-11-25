@@ -8,12 +8,21 @@ local tsgi = require('http.tsgi')
 local response = require('http.router.response')
 local json = require('json')
 local log = require('log')
+local cfg = require('app.config')
 
 local function limit_rps(env)
-    --local data = box.space.counter.index.primary:select(key_id)[1]
-
-    resp = tsgi.next(env)
-    return resp
+    local ts = os.time()
+    box.space.counter:upsert({ts, 1}, {{'+', 2, 1}})
+    local rps = box.space.counter:select(ts)[1][2]
+    if rps > cfg.max_rps then
+        local resp = setmetatable({ headers = {} }, response.metatable)
+        resp.headers['content-type'] = "application/json; charset=utf-8"
+        -- Of course we shouldn't show rps limit to user on a real server)
+        resp.body = json.encode({ error = string.format('rps limit hit [%d]! try again later', rps) })
+        resp.status = 429
+        return resp
+    end
+    return tsgi.next(env)
 end
 
 local function catch_error(env)
@@ -28,13 +37,19 @@ local function catch_error(env)
         resp.body = json.encode(json_data)
         resp.status = 400
     end
-    log.info('Response: %s', resp.body)
+    return resp
+end
+
+local function log_response(env)
+    local resp = tsgi.next(env)
+    log.info('Response: [%d] %s', resp.status or 200, resp.body or "")
     return resp
 end
 
 local middleware = {
     catch_error = catch_error,
     limit_rps = limit_rps,
+    log_response = log_response,
 }
 
 return middleware

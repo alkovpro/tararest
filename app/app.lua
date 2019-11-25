@@ -6,29 +6,17 @@
 ---
 
 local log = require('log')
+local cfg = require('app.config')
+local schema = require('app.schema')
+local rest = require('app.rest')
+local httpd = require('http.server')
 
 log.info('Starting App...')
 
 box.cfg {}
-box.once('schema', function()
-    local data = box.schema.create_space('data')
-    data:format({
-        {name = 'key', type = 'string'},
-        {name = 'value', type = 'map'},
-    })
-    data:create_index('primary', {parts = {{field = 1, type ='str', collation='unicode_ci'}}})
+schema.init()
 
-    --local counter = box.schema.create_space('counter')
-    --counter:format({
-    --    {name = 'name', type = 'string'},
-    --    {name = 'value', type = 'int'},
-    --})
-    --counter:create_index('primary', {parts = {{field = 1, type ='str'}}})
-end)
-
-local rest = require('app.rest')
-local httpd = require('http.server')
-local server = httpd.new('127.0.0.1', 8080, {
+local server = httpd.new(cfg.host, cfg.port, {
     log_requests = true,
     log_errors = true
 })
